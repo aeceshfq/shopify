@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
-import { Page, Layout, Card, TextField, RadioButton, FormLayout, Stack, Checkbox, Tag, Select } from '@shopify/polaris';
+import { Page, Layout, Card, TextField, RadioButton, FormLayout, Stack, Checkbox, Tag, Select, PageActions } from '@shopify/polaris';
 
-class Discounts extends Component {
+export default class Discounts extends Component {
 
     constructor(props) {
         super(props);
@@ -14,8 +14,10 @@ class Discounts extends Component {
             tempExeptTagValue: "",
             tempCustomerTagValue: "",
             totalSpendCondition: "gt",
-            totalSpendValue: ""
-
+            totalSpendValue: "",
+            discountType: "percentage",
+            discountValue: "0",
+            appliesTo: "entire_store"
         };
     }
 
@@ -26,11 +28,13 @@ class Discounts extends Component {
                 try{
                     v = v.replace(",", "");
                 }catch(e){}
+                if(v.trim() === "") return;
                 try{
                     if(-1===customerExceptedTags.findIndex(x=>x.trim().toLowerCase() === v.trim().toLowerCase())){
                         customerExceptedTags.push(v.trim());
                     }
                 }catch(e){}
+                
                 this.setState({customerExceptedTags, tempExeptTagValue: "" });
             }
             else{
@@ -59,6 +63,7 @@ class Discounts extends Component {
                 try{
                     v = v.replace(",", "");
                 }catch(e){}
+                if(v.trim() === "") return;
                 try{
                     if(-1===customerTags.findIndex(x=>x.trim().toLowerCase() === v.trim().toLowerCase())){
                         customerTags.push(v.trim());
@@ -88,7 +93,7 @@ class Discounts extends Component {
 
     render() {
         const {
-            customerType, customerExceptLogin, customerExceptTags, customerExceptedTags, tempExeptTagValue, tempCustomerTagValue, returingCondition, totalSpendValue
+            customerType, customerExceptLogin, customerExceptTags, customerExceptedTags, tempExeptTagValue, tempCustomerTagValue, returingCondition, totalSpendValue, discountType, discountValue, appliesTo
         } = this.state;
 
         var customerSubSection = <div className="customers--subSection">
@@ -107,23 +112,31 @@ class Discounts extends Component {
                 />
                 {
                     customerExceptTags && <div>
-                        <TextField
-                            label="Excepted tag"
-                            value={tempExeptTagValue}
-                            onChange={ (v) => this.handleExceptedTags(v) }
-                            onBlur={() => {
-                                var customerExceptedTags = this.state.customerExceptedTags;
-                                try{
-                                    tempExeptTagValue = tempExeptTagValue.replace(",", "");
-                                }catch(e){}
-                                try{
-                                    if(-1===customerExceptedTags.findIndex(x=>x.trim().toLowerCase() === customerExceptedTags.trim().toLowerCase())){
-                                        customerExceptedTags.push(tempExeptTagValue.trim());
-                                    }
-                                }catch(e){}
-                                this.setState({customerExceptedTags, tempExeptTagValue: "" });
-                            }}
-                        />
+                        <FormLayout>
+                            <FormLayout.Group>
+                                <TextField
+                                    label="Excepted tag"
+                                    value={tempExeptTagValue}
+                                    onChange={ (v) => this.handleExceptedTags(v) }
+                                    onBlur={() => {
+                                        var customerExceptedTags = this.state.customerExceptedTags;
+                                        var v = this.state.tempExeptTagValue;
+                                        try{
+                                            v = v.replace(",", "");
+                                        }catch(e){}
+                                        if(v.trim() === "") return;
+                                        try{
+                                            if(-1===customerExceptedTags.findIndex(x=>x.trim().toLowerCase() === v.trim().toLowerCase())){
+                                                customerExceptedTags.push(v.trim());
+                                                this.setState({customerExceptedTags, tempExeptTagValue: "" });
+                                            }
+                                        }catch(e){}
+                                    }}
+                                />
+                                <div></div>
+                                <div></div>
+                            </FormLayout.Group>
+                        </FormLayout>
                     </div>
                 }
                 {
@@ -138,11 +151,30 @@ class Discounts extends Component {
 
         var getTagSection = <div className="customers--subSection">
             <Stack vertical spacing="extraTight">
-                <TextField
-                    label="Customer tags"
-                    value={tempCustomerTagValue}
-                    onChange={ (v) => this.handleCustomerTags(v) }
-                />
+                <FormLayout>
+                    <FormLayout.Group>
+                        <TextField
+                            label="Customer tags"
+                            value={tempCustomerTagValue}
+                            onChange={ (v) => this.handleCustomerTags(v) }
+                            onBlur={() => {
+                                var customerTags = this.state.customerTags;
+                                var v = this.state.tempCustomerTagValue;
+                                try{
+                                    v = v.replace(",", "");
+                                }catch(e){}
+                                if(v.trim() === "") return;
+                                try{
+                                    if(-1===customerTags.findIndex(x=>x.trim().toLowerCase() === v.trim().toLowerCase())){
+                                        customerTags.push(v.trim());
+                                        this.setState({customerTags, tempCustomerTagValue: "" });
+                                    }
+                                }catch(e){}
+                            }}
+                        />
+                        <div></div><div></div>
+                    </FormLayout.Group>
+                </FormLayout>
                 {
                     (customerType.length > 0) && <div>
                         <Stack>
@@ -189,41 +221,44 @@ class Discounts extends Component {
                             />
                             {
                                 ("returning" === customerType) && <div className="customers--subSection">
-                                    <Stack vertical spacing="extraTight">
-                                        <TextField
-                                            connectedLeft={
-                                                <Select
-                                                    label="returing customer condition"
-                                                    labelHidden
-                                                    options={[
-                                                        { label:"Total spend greater than", value: "gt" },
-                                                        { label:"Total spend less than", value: "lt" },
-                                                        { label:"Total spend equal to", value: "eq" }
-                                                    ]}
-                                                    value={returingCondition}
-                                                    onChange={(v)=> {this.setState({returingCondition:v})}}
-                                                ></Select>
-                                            }
-                                            label="Returning customer condition"
-                                            labelHidden
-                                            value={totalSpendValue}
-                                            onChange={(v) => {this.setState({totalSpendValue:v})}}
-                                            onBlur={() => {
-                                                var totalSpendValue = this.state.totalSpendValue;
-                                                if(totalSpendValue){
-                                                    if(totalSpendValue.trim() !== ""){
-                                                        try{
-                                                            totalSpendValue = (Number(totalSpendValue).toFixed(2)).toString();
-                                                        }catch(e){}
-                                                        if(isNaN(totalSpendValue)){
-                                                            totalSpendValue = 0;
-                                                        }
-                                                        this.setState({totalSpendValue})
-                                                    }
+                                    <FormLayout>
+                                        <FormLayout.Group>
+                                            <TextField
+                                                connectedLeft={
+                                                    <Select
+                                                        label="returing customer condition"
+                                                        labelHidden
+                                                        options={[
+                                                            { label:"Total spend greater than", value: "gt" },
+                                                            { label:"Total spend less than", value: "lt" },
+                                                            { label:"Total spend equal to", value: "eq" }
+                                                        ]}
+                                                        value={returingCondition}
+                                                        onChange={(v)=> {this.setState({returingCondition:v})}}
+                                                    ></Select>
                                                 }
-                                            }}
-                                        />
-                                    </Stack>
+                                                label="Returning customer condition"
+                                                labelHidden
+                                                value={totalSpendValue}
+                                                onChange={(v) => {this.setState({totalSpendValue:v})}}
+                                                onBlur={() => {
+                                                    var totalSpendValue = this.state.totalSpendValue;
+                                                    if(totalSpendValue){
+                                                        if(totalSpendValue.trim() !== ""){
+                                                            try{
+                                                                totalSpendValue = (Number(totalSpendValue).toFixed(2)).toString();
+                                                            }catch(e){}
+                                                            if(isNaN(totalSpendValue)){
+                                                                totalSpendValue = 0;
+                                                            }
+                                                            this.setState({totalSpendValue})
+                                                        }
+                                                    }
+                                                }}
+                                            />
+                                            <div></div>
+                                        </FormLayout.Group>
+                                    </FormLayout>
                                 </div>
                             }
                         </Stack>
@@ -232,18 +267,113 @@ class Discounts extends Component {
             </Card>
         </div>
 
+        var sectionTwo = <div>
+            <Card title="Discount Types">
+                <Card.Section>
+                    <FormLayout>
+                        <Stack vertical spacing="tight">
+                            <RadioButton
+                                label="Percentage"
+                                value={discountType}
+                                checked={"percentage" === discountType}
+                                id="percentage"
+                                onChange={(v,id) => this.setState({discountType:id})}
+                            />
+                            <RadioButton
+                                label="Price discount (price off)"
+                                value={discountType}
+                                checked={"price_off" === discountType}
+                                id="price_off"
+                                onChange={(v,id) => this.setState({discountType:id})}
+                            />
+                            <RadioButton
+                                label="Set fix price"
+                                value={discountType}
+                                checked={"set_fix_price" === discountType}
+                                id="set_fix_price"
+                                onChange={(v,id) => this.setState({discountType:id})}
+                            />
+                        </Stack>
+                    </FormLayout>
+                </Card.Section>
+            </Card>
+            <Card title="Value">
+                <Card.Section>
+                    <FormLayout>
+                        <FormLayout.Group>
+                            <TextField 
+                                label="Discount value"
+                                value={discountValue}
+                                onChange={(v) => { this.setState({discountValue:v})}}
+                                onBlur={()=> {
+                                    var discountValue = this.state.discountValue;
+                                    if(discountValue && discountValue.trim() !== ""){
+                                        try{
+                                            discountValue = (Number(discountValue).toFixed(2)).toString();
+                                        }catch(e){}
+                                        if(isNaN(discountValue))return;
+                                        this.setState({discountValue})
+                                    }
+                                }}
+                            />
+                            <div></div>
+                            <div></div>
+                        </FormLayout.Group>
+                    </FormLayout>
+                </Card.Section>
+                <Card.Section title="APPLIES TO">
+                    <FormLayout>
+                        <Stack vertical spacing="tight">
+                            <RadioButton
+                                label="Entire order"
+                                checked={"entire_store" === appliesTo}
+                                id="entire_store"
+                                onChange={(v,id) => this.setState({appliesTo:id})}
+                            />
+                            <RadioButton
+                                label="Specific collections"
+                                checked={"collections" === appliesTo}
+                                id="collections"
+                                onChange={(v,id) => this.setState({appliesTo:id})}
+                            />
+                            <RadioButton
+                                label="Specific products"
+                                checked={"products" === appliesTo}
+                                id="products"
+                                onChange={(v,id) => this.setState({appliesTo:id})}
+                            />
+                            <RadioButton
+                                label="Specific variants"
+                                checked={"variants" === appliesTo}
+                                id="variants"
+                                onChange={(v,id) => this.setState({appliesTo:id})}
+                            />
+                        </Stack>
+                    </FormLayout>
+                </Card.Section>
+            </Card>
+        </div>
+
         return (
             <Page
-                title="GA"
+                title="Discounts"
             >
                 <Layout>
                     <Layout.Section>
                         {sectionOne}
+                    </Layout.Section>
+                    <Layout.Section>
+                        {sectionTwo}
+                    </Layout.Section>
+                    <Layout.Section>
+                        <PageActions
+                            primaryAction={{content:"Save discount"}}
+                            secondaryActions={{content: "Cancel"}}
+                        >
+                        </PageActions>
                     </Layout.Section>
                 </Layout>
             </Page>
         );
     }
 }
-
-export default Discounts;
