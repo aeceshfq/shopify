@@ -47,6 +47,7 @@ Shopify.collection = {};
 Shopify.customCollection = {};
 Shopify.smartCollection = {};
 Shopify.customCollection = {};
+Shopify.page = {};
 Shopify.getRequest = function(url, params, callback){
     if(typeof params === "undefined") params = {};
     if(typeof params.limit === "undefined") params.limit = "250";
