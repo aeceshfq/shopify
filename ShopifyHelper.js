@@ -1,7 +1,18 @@
-var ShopifyHelper = {};
 const Shops = require("../models/Shops");
 const ShopifyAPI = require('shopify-node-api');
 var shop = "solutionwin-apps-dev.myshopify.com";
+
+var ShopifyHelper = {};
+var Shopify = {};
+Shopify.product= {};
+Shopify.collection = {};
+Shopify.customCollection = {};
+Shopify.smartCollection = {};
+Shopify.customCollection = {};
+Shopify.page = {};
+Shopify.blog = {};
+Shopify.articles = {};
+Shopify.comments = {};
 const SHOPIFY_ADMIN = "/admin/api/"+process.env.SHOPIFY_API_VERSION;
 
 function initShopify(shop) {
@@ -40,14 +51,6 @@ function reducer(a, cur) {
     else a.previousPage = uri;
     return a;
 }
-
-var Shopify = {};
-Shopify.product= {};
-Shopify.collection = {};
-Shopify.customCollection = {};
-Shopify.smartCollection = {};
-Shopify.customCollection = {};
-Shopify.page = {};
 Shopify.getRequest = function(url, params, callback){
     if(typeof params === "undefined") params = {};
     if(typeof params.limit === "undefined") params.limit = "250";
@@ -146,7 +149,6 @@ Shopify.collection.products = function(params, callback){
         if(typeof callback === "function") callback(e,products);
     });
 }
-
 Shopify.page.list = function(params, callback){
     if(typeof params === "undefined") throw new Error("Shop parameter is required");
     var url = SHOPIFY_ADMIN+'/pages.json?limit='+(params.limit || "250");
@@ -154,6 +156,51 @@ Shopify.page.list = function(params, callback){
     Shopify.getRequest(url, params, function(e,products){
         if(typeof callback === "function") callback(e,products);
     })
+}
+Shopify.page.get = function(params, callback){
+    if(typeof params === "undefined") throw new Error("Shop parameter is required");
+    if(typeof params.id === "undefined") throw new Error("Id parameter is required");
+    var url = SHOPIFY_ADMIN+'/pages/'+params.id+'.json';
+    params.type = "page";
+    Shopify.getRequest(url, params, function(e,products){
+        if(typeof callback === "function") callback(e,products);
+    });
+}
+Shopify.blog.list = function(params, callback){
+    if(typeof params === "undefined") throw new Error("Shop parameter is required");
+    var url = SHOPIFY_ADMIN+'/blogs.json?limit='+(params.limit || "250");
+    params.type = "blogs";
+    Shopify.getRequest(url, params, function(e,products){
+        if(typeof callback === "function") callback(e,products);
+    })
+}
+Shopify.blog.get = function(params, callback){
+    if(typeof params === "undefined") throw new Error("Shop parameter is required");
+    if(typeof params.id === "undefined") throw new Error("Id parameter is required");
+    var url = SHOPIFY_ADMIN+'/blogs/'+params.id+'.json';
+    params.type = "blog";
+    Shopify.getRequest(url, params, function(e,products){
+        if(typeof callback === "function") callback(e,products);
+    });
+}
+Shopify.articles.get = function(params, callback){
+    if(typeof params === "undefined") throw new Error("Shop parameter is required");
+    if(typeof params.id === "undefined") throw new Error("Id parameter is required");
+    var url = SHOPIFY_ADMIN+'/blogs/'+params.id+'/articles.json';
+    params.type = "articles";
+    Shopify.getRequest(url, params, function(e,products){
+        if(typeof callback === "function") callback(e,products);
+    });
+}
+Shopify.comments.get = function(params, callback){
+    if(typeof params === "undefined") throw new Error("Shop parameter is required");
+    if(typeof params.blog_id === "undefined") throw new Error("Blog id parameter is required");
+    if(typeof params.article_id === "undefined") throw new Error("Article id parameter is required");
+    var url = SHOPIFY_ADMIN+'/comments.json?article_id'+params.article_id+'&blog_id='+params.blog_id;
+    params.type = "comments";
+    Shopify.getRequest(url, params, function(e,products){
+        if(typeof callback === "function") callback(e,products);
+    });
 }
 
 // Shopify.collection.products({shop, id: "164913774729"}, function(e,results){
