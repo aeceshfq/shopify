@@ -1,0 +1,39 @@
+
+.customers--subSection {
+  margin-left: 2.4rem;
+}
+.selection-item {
+  display: inline-flex;
+  position: relative;
+  width: 100%;
+  align-items: center;
+  padding: 4px 0px;
+  border-bottom: 1px solid #dfe3e8;
+}
+.remove-product--container {
+  position: absolute;
+  right: 0px;
+}
+.title--container {
+  margin-left: 12px;
+  margin-right: 4.5rem;
+}
+.selection-item:hover {
+  background-color: #f4f6f847;
+}
+.product--was-selected--container {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+.margin-bottom-12px{
+  margin-bottom: 12px;
+}
+.products--window-show-hide {
+  position: absolute;
+  right: 0;
+}
+.product--title a {
+  text-decoration: none;
+  color: inherit;
+}
