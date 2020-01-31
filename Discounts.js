@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
-import { Page, Layout, Card, TextField, RadioButton, FormLayout, Stack, Checkbox, Tag, Select, PageActions, ActionList, Popover, TextStyle, Badge, List, Banner } from '@shopify/polaris';
-import { CirclePlusMinor } from '@shopify/polaris-icons';
+import { Page, Layout, Card, TextField, RadioButton, FormLayout, Stack, Checkbox, Tag, Select, PageActions, ActionList, Popover, TextStyle, Badge, List, Banner, Button, Collapsible } from '@shopify/polaris';
+import { CirclePlusMinor, DeleteMajorMonotone } from '@shopify/polaris-icons';
+import {Provider, ResourcePicker} from '@shopify/app-bridge-react';
 
 export default class Discounts extends Component {
 
@@ -25,6 +26,13 @@ export default class Discounts extends Component {
             exampleProductQty: "1",
             exampleDiscountType: "percentage",
             exampleDiscountValue: "10.00",
+            productPikerOpen: false,
+            variantPikerOpen: false,
+            collectionPikerOpen: false,
+            products: [],
+            variants: [],
+            collections: [],
+            productsCollapsed: false
         };
     }
 
@@ -118,10 +126,114 @@ export default class Discounts extends Component {
         return result;
     }
 
+    resizeImage(image){
+        var size = "44x44";
+        if (image) {
+            if (image.indexOf(".jpg") > -1) {
+                var n = image.lastIndexOf(".jpg");
+                image = image.substring(0, n) + "_" + size + image.substring(n);
+            }
+            else if (image.indexOf(".png") > -1) {
+                var n = image.lastIndexOf(".png");
+                image = image.substring(0, n) + "_" + size + image.substring(n);
+            }
+            else if (image.indexOf(".gif") > -1) {
+                var n = image.lastIndexOf(".gif");
+                image = image.substring(0, n) + "_" + size + image.substring(n);
+            }
+            return image;
+        }
+        else {
+            return "https://cdn.shopify.com/s/images/admin/no-image-large_64x64.gif?da5ac9ca38617f8fcfb1ee46268f66d451ca66b4";
+        }
+    }
+
+    productImage(product){
+        if(product && product.images){
+            if(product.images[0] && product.images[0].originalSrc){
+                return <img src={this.resizeImage(product.images[0].originalSrc)} alt={product.title}></img>
+            }
+        }
+        return null;
+    }
+
+    renderSelectedProducts(){
+        return this.state.products.map((product,index) => {
+            return <div className="selection-item" key={'kyeee'+index}>
+                <div className="image--container">{this.productImage(product)}</div>
+                <div className="title--container"><span className="product--title">
+                    <a href={'https://'+this.props.shop+'/products/'+product.handle} target="_new">{product.title}</a>
+                    </span></div>
+                <div className="remove-product--container"><span className="remove--icon"><Button icon={DeleteMajorMonotone} onClick={() => {
+                    var products = this.state.products;
+                    try{
+                        products = products.filter(x=>x.id !== product.id);
+                    }catch(e){}
+                    this.setState({products})
+                }}/></span></div>
+            </div>
+        })
+    }
+
     render() {
         const {
-            customerType, customerExceptLogin, customerExceptTags, customerExceptedTags, tempExeptTagValue, tempCustomerTagValue, returingCondition, totalSpendValue, discountType, discountValue, appliesTo, title, state
+            customerType, customerExceptLogin, customerExceptTags, customerExceptedTags, tempExeptTagValue, tempCustomerTagValue, returingCondition, totalSpendValue, discountType, discountValue, appliesTo, title, state, productPikerOpen, variantPikerOpen, collectionPikerOpen, products, variants, collections, productsCollapsed
         } = this.state;
+
+        const productPiker = <Provider config={{apiKey: '2a77e99481da7e3b9033349651543b13', shopOrigin: "solutionwin-apps-dev.myshopify.com"}}>
+            <ResourcePicker
+                initialQuery="8117"
+                resourceType="Product"
+                open={true}
+                showVariants={false}
+                onSelection={(selection) => {
+                    try{
+                        selection = selection?selection.selection:[];
+                    }catch(e){}
+                    var products = this.state.products;
+                    if(selection && selection.length > 0){
+                        selection.forEach(product => {
+                            try{
+                                if(products.findIndex(x=>x.id.toString() === product.id.toString()) === -1){
+                                    products.push({
+                                        id: product.id,
+                                        title: product.title,
+                                        handle: product.handle,
+                                        images: product.images
+                                    })
+                                }
+                            }catch(e){}
+                        });
+                    }
+                    if(products.length > 0){
+                        this.setState({products, productsCollapsed:true})
+                    }
+                    else{
+                        this.setState({products})
+                    }
+                }}
+                onCancel={() => {}}
+            />
+        </Provider>;
+
+        const collectionPiker = <Provider config={{apiKey: '2a77e99481da7e3b9033349651543b13', shopOrigin: "solutionwin-apps-dev.myshopify.com"}}>
+            <ResourcePicker
+                resourceType="Collection"
+                open={true}
+                onSelection={(s) =>console.log(s)}
+                onCancel={() => {}}
+            />
+        </Provider>;
+
+        const variantPiker = <Provider config={{apiKey: '2a77e99481da7e3b9033349651543b13', shopOrigin: "solutionwin-apps-dev.myshopify.com"}}>
+            <ResourcePicker
+                resourceType="ProductVariant"
+                open={true}
+                onSelection={(s) =>console.log(s)}
+                onCancel={() => {}}
+            />
+        </Provider>;
+
 
         var customerSubSection = <div className="customers--subSection">
             <Stack vertical spacing="extraTight">
@@ -403,6 +515,27 @@ export default class Discounts extends Component {
                     </Stack>
                 </FormLayout>
             </Card.Section>
+            {
+                (products && products.length > 0 && "products" === appliesTo) && <Card.Section>
+                    <div className={'product--was-selected--container'+(productsCollapsed?" margin-bottom-12px":"")}>
+                        <div className="product-selected--count">
+                            {products.length} {products.length > 1?"products":"product"} was selected
+                        </div>
+                        <div className="products--window-show-hide">
+                            <Button
+                                size="slim"
+                                ariaControls="basic-collapsible"
+                                onClick={() => {this.setState({productsCollapsed: !productsCollapsed })}}
+                            >
+                                {productsCollapsed ? "Hide all products": "Show all products"}
+                            </Button>
+                        </div>
+                    </div>
+                    <Collapsible open={productsCollapsed} id="basic-collapsible">
+                        {this.renderSelectedProducts()}
+                    </Collapsible>
+                </Card.Section>
+            }
         </Card>
 
         var titleSection = <Card title="Title">
@@ -426,6 +559,15 @@ export default class Discounts extends Component {
             <Page
                 title="Discounts"
             >
+                {
+                    appliesTo === "products" && productPiker
+                }
+                {
+                    appliesTo === "collections" && collectionPiker
+                }
+                {
+                    appliesTo === "variants" && variantPiker
+                }
                 <Layout>
                     <Layout.Section>
                         {titleSection}
