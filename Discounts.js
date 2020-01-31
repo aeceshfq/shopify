@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Page, Layout, Card, TextField, RadioButton, FormLayout, Stack, Checkbox, Tag, Select, PageActions, ActionList, Popover, TextStyle, Badge, List, Banner, Button, Collapsible } from '@shopify/polaris';
+import { Page, Layout, Card, TextField, RadioButton, FormLayout, Stack, Checkbox, Tag, Select, PageActions, ActionList, Popover, TextStyle, Badge, List, Banner, Button, Collapsible, ButtonGroup } from '@shopify/polaris';
 import { CirclePlusMinor, DeleteMajorMonotone } from '@shopify/polaris-icons';
 import {Provider, ResourcePicker} from '@shopify/app-bridge-react';
 
@@ -182,9 +182,9 @@ export default class Discounts extends Component {
 
         const productPiker = <Provider config={{apiKey: '2a77e99481da7e3b9033349651543b13', shopOrigin: "solutionwin-apps-dev.myshopify.com"}}>
             <ResourcePicker
-                initialQuery="8117"
+                // initialQuery="8117"
                 resourceType="Product"
-                open={true}
+                open={productPikerOpen}
                 showVariants={false}
                 onSelection={(selection) => {
                     try{
@@ -206,20 +206,21 @@ export default class Discounts extends Component {
                         });
                     }
                     if(products.length > 0){
-                        this.setState({products, productsCollapsed:true})
+                        this.setState({products, productsCollapsed:true, productPikerOpen: false})
                     }
                     else{
-                        this.setState({products})
+                        this.setState({products, productPikerOpen: false})
                     }
                 }}
-                onCancel={() => {}}
+                onCancel={() => {this.setState({productPikerOpen: false})}}
+                onClose={() => {this.setState({productPikerOpen: false})}}
             />
         </Provider>;
 
         const collectionPiker = <Provider config={{apiKey: '2a77e99481da7e3b9033349651543b13', shopOrigin: "solutionwin-apps-dev.myshopify.com"}}>
             <ResourcePicker
                 resourceType="Collection"
-                open={true}
+                open={collectionPikerOpen}
                 onSelection={(s) =>console.log(s)}
                 onCancel={() => {}}
             />
@@ -228,7 +229,7 @@ export default class Discounts extends Component {
         const variantPiker = <Provider config={{apiKey: '2a77e99481da7e3b9033349651543b13', shopOrigin: "solutionwin-apps-dev.myshopify.com"}}>
             <ResourcePicker
                 resourceType="ProductVariant"
-                open={true}
+                open={variantPikerOpen}
                 onSelection={(s) =>console.log(s)}
                 onCancel={() => {}}
             />
@@ -492,48 +493,59 @@ export default class Discounts extends Component {
                             label="Entire order"
                             checked={"entire_store" === appliesTo}
                             id="entire_store"
-                            onChange={(v,id) => this.setState({appliesTo:id})}
+                            onChange={(v,id) => this.setState({appliesTo: id})}
                         />
                         <RadioButton
                             label="Specific collections"
                             checked={"collections" === appliesTo}
                             id="collections"
-                            onChange={(v,id) => this.setState({appliesTo:id})}
+                            onChange={(v,id) => this.setState({appliesTo: id, collectionPikerOpen: true})}
                         />
                         <RadioButton
                             label="Specific products"
                             checked={"products" === appliesTo}
                             id="products"
-                            onChange={(v,id) => this.setState({appliesTo:id})}
+                            onChange={(v,id) => this.setState({appliesTo: id, productPikerOpen: true})}
                         />
                         <RadioButton
                             label="Specific variants"
                             checked={"variants" === appliesTo}
                             id="variants"
-                            onChange={(v,id) => this.setState({appliesTo:id})}
+                            onChange={(v,id) => this.setState({appliesTo: id, variantPikerOpen: true})}
                         />
                     </Stack>
                 </FormLayout>
             </Card.Section>
             {
-                (products && products.length > 0 && "products" === appliesTo) && <Card.Section>
+                ("products" === appliesTo) && <Card.Section>
                     <div className={'product--was-selected--container'+(productsCollapsed?" margin-bottom-12px":"")}>
                         <div className="product-selected--count">
                             {products.length} {products.length > 1?"products":"product"} was selected
                         </div>
                         <div className="products--window-show-hide">
-                            <Button
-                                size="slim"
-                                ariaControls="basic-collapsible"
-                                onClick={() => {this.setState({productsCollapsed: !productsCollapsed })}}
-                            >
-                                {productsCollapsed ? "Hide all products": "Show all products"}
-                            </Button>
+                            <ButtonGroup>
+                                <Button
+                                    size="slim"
+                                    onClick={() => {this.setState({ productPikerOpen: true })}}
+                                >
+                                    Select products
+                                </Button>
+                                {
+                                    products.length > 0 &&
+                                    <Button
+                                        size="slim"
+                                        ariaControls="basic-collapsible"
+                                        onClick={() => {this.setState({productsCollapsed: !productsCollapsed })}}
+                                    >
+                                        {productsCollapsed ? "Hide products": "Show products"}
+                                    </Button>
+                                }
+                            </ButtonGroup>
                         </div>
                     </div>
-                    <Collapsible open={productsCollapsed} id="basic-collapsible">
+                    { (products.length > 0) && <Collapsible open={productsCollapsed} id="basic-collapsible">
                         {this.renderSelectedProducts()}
-                    </Collapsible>
+                    </Collapsible> }
                 </Card.Section>
             }
         </Card>
