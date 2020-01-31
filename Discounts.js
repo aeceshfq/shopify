@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { Page, Layout, Card, TextField, RadioButton, FormLayout, Stack, Checkbox, Tag, Select, PageActions, ActionList, Popover, TextStyle, Badge, List, Banner, Button, Collapsible, ButtonGroup } from '@shopify/polaris';
-import { CirclePlusMinor, DeleteMajorMonotone } from '@shopify/polaris-icons';
+import { CirclePlusMinor, DeleteMajorMonotone, ChevronDownMinor, ChevronUpMinor, PlusMinor } from '@shopify/polaris-icons';
 import {Provider, ResourcePicker} from '@shopify/app-bridge-react';
 
 export default class Discounts extends Component {
@@ -520,19 +520,24 @@ export default class Discounts extends Component {
                 ("products" === appliesTo) && <Card.Section>
                     <div className={'product--was-selected--container'+(productsCollapsed?" margin-bottom-12px":"")}>
                         <div className="product-selected--count">
-                            {products.length} {products.length > 1?"products":"product"} was selected
+                            {
+                                products.length < 1? <span>No product was selected</span>:
+                                <span>{products.length} {products.length > 1?"products":"product"} was selected</span>
+                            }
                         </div>
                         <div className="products--window-show-hide">
                             <ButtonGroup>
                                 <Button
+                                    icon={PlusMinor}
                                     size="slim"
                                     onClick={() => {this.setState({ productPikerOpen: true })}}
                                 >
-                                    Select products
+                                    Add {(products.length>0)&& "more"} products
                                 </Button>
                                 {
                                     products.length > 0 &&
                                     <Button
+                                        icon={productsCollapsed ? ChevronUpMinor: ChevronDownMinor}
                                         size="slim"
                                         ariaControls="basic-collapsible"
                                         onClick={() => {this.setState({productsCollapsed: !productsCollapsed })}}
